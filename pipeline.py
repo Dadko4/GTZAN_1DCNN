@@ -5,6 +5,7 @@ from model import build_model, f1_m
 from tensorflow import keras
 from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
                                         ReduceLROnPlateau)
+from datetime import datetime
 
 
 # model_name = "first_try.h5"
@@ -29,7 +30,7 @@ model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=6,
                     metrics=['accuracy', f1_m])
 
 # API key = 8d9fd59df428fadd8926c268bf32588eb4c560f6
-wandb.init(project='nn2_test',
+wandb.init(project='nn2_ejkejej',
            config={"optimizer": str(optimizer).split()[0].split('.')[-1],
                    "loss": loss.__name__.split('.')[-1],
                    "batch_size": batch_size, "lr": lr,
@@ -41,14 +42,14 @@ es = EarlyStopping(monitor='val_loss', mode='min', patience=15,
                    restore_best_weights=False)
 lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, verbose=1,
                           min_lr=0.0001)
-mc = ModelCheckpoint(filepath="best_model_2.h5", save_best_only=True)
+mc = ModelCheckpoint(filepath=f"best_model_{datetime.now()}.h5",
+                     save_best_only=True)
 callbacks = [es, lr_cb, mc, WandbCallback()]
 
 history = model.fit(train_X, train_y, epochs=n_epochs,
                     validation_data=(val_X, val_y),
                     callbacks=callbacks, verbose=1,
                     batch_size=batch_size)
-model.save(model_name)
 
 test_loss, test_acc, test_f1 = model.evaluate(test_X, test_y)
 wandb.config.update({"test_loss": test_loss,
