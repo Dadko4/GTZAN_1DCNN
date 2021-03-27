@@ -2,6 +2,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import (Conv1D, Dense, Flatten, Dropout,
                                      BatchNormalization, MaxPooling1D)
 from tensorflow.keras import backend as K
+import tensorflow as tf
+
+
+def init_env():
+    K.clear_session()
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    tf.config.experimental.set_memory_growth(gpus[0], True)
 
 
 def recall_m(y_true, y_pred):
@@ -24,20 +31,21 @@ def f1_m(y_true, y_pred):
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 
-def build_model(n_hidden_conv=1, timesteps=1024, num_classes=10,
-                loss='categorical_crossentropy', optimizer='adam',
-                filters=64, metrics=['accuracy']):
+def build_model(n_hidden_conv=1, kernel_size=3, timesteps=1024, 
+                num_classes=10, loss='categorical_crossentropy', 
+                optimizer='adam', filters=64, metrics=['accuracy']):
+    init_env()
     model = Sequential()
-    model.add(Conv1D(filters=filters, kernel_size=3, activation='relu',
+    model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu',
                      input_shape=(timesteps, 1)))
     model.add(MaxPooling1D(3, padding='same'))
     for _ in range(n_hidden_conv):
         model.add(Dropout(0.2))
-        model.add(Conv1D(filters=filters, kernel_size=3, activation='relu'))
+        model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu'))
         model.add(MaxPooling1D(3, padding='same'))
     model.add(Dropout(0.2))
     model.add(Flatten())
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(128, activation='relu'))
     model.add(BatchNormalization())
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=optimizer,

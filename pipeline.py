@@ -6,31 +6,37 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
                                         ReduceLROnPlateau)
 
-# config
+
 model_name = "first_try.h5"
-n_epochs = 25
-batch_size = 512
-window_size = 1024
-overleap = 256
-lr = 0.001
-optimizer = keras.optimizers.Adam(lr)
-loss = keras.losses.categorical_crossentropy
-n_hidden_conv = 3
-n_filters = 32
+
+window_size = 8192
+overleap = 2048
 
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
-model = build_model(n_hidden_conv=n_hidden_conv, loss=loss, optimizer=optimizer,
-                    filters=n_filters, metrics=['accuracy', f1_m])
+n_epochs = 50
+batch_size = 512
+lr = 0.001
+optimizer = keras.optimizers.RMSprop(lr)
+loss = keras.losses.categorical_crossentropy
+n_hidden_conv = 4
+n_filters = 64
+kernel_size = 8
+
+model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=6,
+                    timesteps=train_X.shape[1], loss=loss, 
+                    optimizer=optimizer, filters=n_filters,
+                    metrics=['accuracy', f1_m])
 
 # API key = 8d9fd59df428fadd8926c268bf32588eb4c560f6
 wandb.init(project='nn2_test',
            config={"optimizer": str(optimizer).split()[0].split('.')[-1],
-                   "loss": loss.__name__.split('.')[-1], "batch_size": batch_size,
-                   "lr": lr, "n_hidden_conv": n_hidden_conv,
-                   "n_filters": n_filters, "window_size": window_size,
-                   "overleap": overleap})
+                   "loss": loss.__name__.split('.')[-1],
+                   "batch_size": batch_size, "lr": lr, 
+                   "n_hidden_conv": n_hidden_conv, 
+                   "kernel_size": kernel_size, "n_filters": n_filters, 
+                   "window_size": window_size, "overleap": overleap})
 
 es = EarlyStopping(monitor='val_loss', mode='min', patience=10,
                    restore_best_weights=False)
