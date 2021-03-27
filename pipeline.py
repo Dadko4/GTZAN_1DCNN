@@ -7,15 +7,14 @@ from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
                                         ReduceLROnPlateau)
 
 
-model_name = "first_try.h5"
-
+# model_name = "first_try.h5"
 window_size = 8192
 overleap = 2048
 
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
-n_epochs = 50
+n_epochs = 75
 batch_size = 512
 lr = 0.001
 optimizer = keras.optimizers.RMSprop(lr)
@@ -33,16 +32,16 @@ model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=6,
 wandb.init(project='nn2_test',
            config={"optimizer": str(optimizer).split()[0].split('.')[-1],
                    "loss": loss.__name__.split('.')[-1],
-                   "batch_size": batch_size, "lr": lr, 
-                   "n_hidden_conv": n_hidden_conv, 
-                   "kernel_size": kernel_size, "n_filters": n_filters, 
+                   "batch_size": batch_size, "lr": lr,
+                   "n_hidden_conv": n_hidden_conv,
+                   "kernel_size": kernel_size, "n_filters": n_filters,
                    "window_size": window_size, "overleap": overleap})
 
-es = EarlyStopping(monitor='val_loss', mode='min', patience=10,
+es = EarlyStopping(monitor='val_loss', mode='min', patience=15,
                    restore_best_weights=False)
-lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1,
+lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, verbose=1,
                           min_lr=0.0001)
-mc = ModelCheckpoint(filepath="best_model.h5", save_best_only=True)
+mc = ModelCheckpoint(filepath="best_model_2.h5", save_best_only=True)
 callbacks = [es, lr_cb, mc, WandbCallback()]
 
 history = model.fit(train_X, train_y, epochs=n_epochs,
@@ -51,8 +50,7 @@ history = model.fit(train_X, train_y, epochs=n_epochs,
                     batch_size=batch_size)
 model.save(model_name)
 
-test_loss, test_acc, test_f1 = model.evaluate(test_X, test_y,
-                                              metrics=['accuracy', f1_m])
+test_loss, test_acc, test_f1 = model.evaluate(test_X, test_y)
 wandb.config.update({"test_loss": test_loss,
                      "test_acc": test_acc,
                      "test_f1": test_f1})
