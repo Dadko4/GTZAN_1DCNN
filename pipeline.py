@@ -16,7 +16,7 @@ data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
 n_epochs = 75
-batch_size = 512
+batch_size = 256
 lr = 0.001
 optimizer = keras.optimizers.RMSprop(lr)
 loss = keras.losses.categorical_crossentropy
@@ -24,8 +24,8 @@ n_hidden_conv = 4
 n_filters = 64
 kernel_size = 8
 
-model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=6,
-                    timesteps=train_X.shape[1], loss=loss, 
+model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=kernel_size,
+                    timesteps=train_X.shape[1], loss=loss,
                     optimizer=optimizer, filters=n_filters,
                     metrics=['accuracy', f1_m])
 

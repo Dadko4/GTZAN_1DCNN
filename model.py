@@ -31,8 +31,8 @@ def f1_m(y_true, y_pred):
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 
-def build_model(n_hidden_conv=1, kernel_size=3, timesteps=1024, 
-                num_classes=10, loss='categorical_crossentropy', 
+def build_model(n_hidden_conv=1, kernel_size=3, timesteps=1024,
+                num_classes=10, loss='categorical_crossentropy',
                 optimizer='adam', filters=64, metrics=['accuracy']):
     init_env()
     model = Sequential()
