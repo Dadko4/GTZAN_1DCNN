@@ -15,8 +15,8 @@ overleap = 256
 lr = 0.001
 optimizer = keras.optimizers.Adam(lr)
 loss = keras.losses.categorical_crossentropy
-n_hidden_conv = 5
-n_filters = 64
+n_hidden_conv = 3
+n_filters = 32
 
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()

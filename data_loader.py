@@ -7,7 +7,9 @@ from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.utils import to_categorical
 np.random.seed(1)
 
+
 class DataLoader:
+    
     def __init__(self, window_size=512, overleap=256,
                  regex_path=r'./genres_original/**/*.wav'):
         self.window_size = window_size
