@@ -36,15 +36,17 @@ def build_model(n_hidden_conv=1, kernel_size=3, timesteps=1024,
                 optimizer='adam', filters=64, metrics=['accuracy']):
     init_env()
     model = Sequential()
-    model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu',
+    model.add(Conv1D(filters=filters, kernel_size=kernel_size,
+                     activation='relu',
                      input_shape=(timesteps, 1)))
     model.add(MaxPooling1D(3, padding='same'))
     for _ in range(n_hidden_conv):
-        model.add(Dropout(0.2))
-        model.add(Conv1D(filters=filters, kernel_size=kernel_size, activation='relu'))
+        model.add(Dropout(0.4))
+        model.add(Conv1D(filters=filters, kernel_size=kernel_size,
+                         activation='relu'))
         model.add(MaxPooling1D(3, padding='same'))
         model.add(BatchNormalization())
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.4))
     model.add(Flatten())
     model.add(Dense(128, activation='relu'))
     model.add(Dense(num_classes, activation='softmax'))

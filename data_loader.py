@@ -3,7 +3,6 @@ from scipy.io import wavfile
 from glob import glob
 import os
 from tqdm import tqdm
-from sklearn.preprocessing import StandardScaler
 from tensorflow.keras.utils import to_categorical
 np.random.seed(1)
 
@@ -28,7 +27,12 @@ class DataLoader:
                 genres.append(os.path.basename(dir_))
             except ValueError:
                 continue
+        self.label2idx = {l: idx for idx, l in enumerate(np.unique(genres))}
+        idx = np.random.randint(0, len(data_list), len(data_list))
+        self._data_list = np.array(data_list)[idx]
+        self._genres = np.array(genres)[idx]
 
+    def _make_windows(self, data_list, genres, shuffle=True):
         all_windows = []
         all_labels = []
         for datapoint, label in tqdm(zip(data_list, genres)):
@@ -38,32 +42,23 @@ class DataLoader:
             all_windows.append(windows)
             all_labels.extend([label] * len(windows))
 
-        self.data = np.vstack(all_windows)
+        data = np.expand_dims(np.vstack(all_windows), axis=-1)
+        labels = np.array([self.label2idx[label] for label in all_labels])
+        if shuffle:
+            idx = np.random.randint(0, len(data), len(data))
+            data = data[idx]
+            labels = labels[idx]
+        return data, to_categorical(labels)
 
-        self.label2idx = {l: idx for idx, l in enumerate(np.unique(genres))}
-        self.labels = np.array([self.label2idx[label] for label in all_labels])
-        idx = np.random.randint(0, self.data.shape[0], self.data.shape[0])
-        self.data = self.data[idx]
-        self.labels = self.labels[idx]
-
-    def _train_val_test_scale(self, X, y, val_size=0.1, test_size=0.1,
-                              scale=True):
-        vs = 1 - (test_size + val_size)
-        ts = 1 - test_size
-        print("Splitting: ", end="")
-        train_X, val_X, test_X = np.split(X, [int(vs*len(X)), int(ts*len(X))])
-        train_y, val_y, test_y = np.split(y, [int(vs*len(y)), int(ts*len(y))])
+    def _scale(self, X, fit=False):
+        print("Scaling: ", end="")
+        if fit:
+            self._mean = np.mean(X)
+            self._std = np.std(X)
+        print("mean and std computing done, scaling arrs: ", end="")
+        X = (X - self._mean) / self._std
         print("Done")
-        if scale:
-            print("Scaling: ", end="")
-            mean = np.mean(train_X)
-            std = np.std(train_X)
-            print("mean and std computing done, scaling arrs: ", end="")
-            train_X = (train_X - mean) / std
-            val_X = (val_X - mean) / std
-            test_X = (test_X - mean) / std
-            print("Done")
-        return (train_X, val_X, test_X, train_y, val_y, test_y)
+        return X
 
     def _window(self, a, window_size=512, overleap=256):
         shape = (a.size - window_size + 1, window_size)
@@ -72,9 +67,23 @@ class DataLoader:
                                                shape=shape)[0::overleap]
         return view
 
-    def get_data(self, val_size=0.1, test_size=0.1, scaler=StandardScaler):
+    def get_data(self, val_size=0.1, test_size=0.1, scale=True):
         if self.data is None:
             self._init_data()
-        X = np.expand_dims(self.data, axis=-1)
-        onehot_y = to_categorical(self.labels)
-        return self._train_val_test_scale(X, onehot_y)
+        vs = 1 - (test_size + val_size)
+        ts = 1 - test_size
+        print("Splitting: ", end="")
+        train_X, val_X, test_X = np.split(self._data_list,
+                                          [int(vs*len(self._data_list)),
+                                           int(ts*len(self._data_list))])
+        train_y, val_y, test_y = np.split(self._genres, [int(vs*len(self._genres)),
+                                                         int(ts*len(self._genres))])
+        print("Done")
+        train_X, train_y = self._make_windows(train_X, train_y)
+        train_X = self._scale(train_X, fit=True)
+        val_X, val_y = self._make_windows(val_X, val_y)
+        val_X = self._scale(val_X)
+        test_X, test_y = self._make_windows(test_X, test_y)
+        test_X = self._scale(test_X)
+
+        return train_X, val_X, test_X, train_y, val_y, test_y

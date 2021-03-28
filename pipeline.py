@@ -10,19 +10,19 @@ from datetime import datetime
 
 # model_name = "first_try.h5"
 window_size = 8192
-overleap = 2048
+overleap = 1024
 
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
-n_epochs = 75
+n_epochs = 90
 batch_size = 256
 lr = 0.001
 optimizer = keras.optimizers.RMSprop(lr)
 loss = keras.losses.categorical_crossentropy
 n_hidden_conv = 4
 n_filters = 64
-kernel_size = 8
+kernel_size = 10
 
 model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=kernel_size,
                     timesteps=train_X.shape[1], loss=loss,
@@ -30,7 +30,7 @@ model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=kernel_size,
                     metrics=['accuracy', f1_m])
 
 # API key = 8d9fd59df428fadd8926c268bf32588eb4c560f6
-wandb.init(project='nn2_ejkejej',
+wandb.init(project='nn2_valid_split',
            config={"optimizer": str(optimizer).split()[0].split('.')[-1],
                    "loss": loss.__name__.split('.')[-1],
                    "batch_size": batch_size, "lr": lr,
@@ -40,7 +40,7 @@ wandb.init(project='nn2_ejkejej',
 
 es = EarlyStopping(monitor='val_loss', mode='min', patience=15,
                    restore_best_weights=False)
-lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, verbose=1,
+lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=1,
                           min_lr=0.0001)
 mc = ModelCheckpoint(filepath=f"best_model_{datetime.now()}.h5",
                      save_best_only=True)
