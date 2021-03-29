@@ -9,14 +9,14 @@ from datetime import datetime
 
 
 # model_name = "first_try.h5"
-window_size = 8192
-overleap = 1024
+window_size = 2**14
+overleap = 2**11
 
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
 n_epochs = 90
-batch_size = 256
+batch_size = 64
 lr = 0.001
 optimizer = keras.optimizers.RMSprop(lr)
 loss = keras.losses.categorical_crossentropy
