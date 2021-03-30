@@ -18,11 +18,11 @@ train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 n_epochs = 90
 batch_size = 64
 lr = 0.001
-optimizer = keras.optimizers.RMSprop(lr)
+optimizer = keras.optimizers.Adam(lr)
 loss = keras.losses.categorical_crossentropy
-n_hidden_conv = 4
+n_hidden_conv = 3
 n_filters = 64
-kernel_size = 10
+kernel_size = 3
 
 model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=kernel_size,
                     timesteps=train_X.shape[1], loss=loss,
@@ -38,10 +38,10 @@ wandb.init(project='nn2_valid_split',
                    "kernel_size": kernel_size, "n_filters": n_filters,
                    "window_size": window_size, "overleap": overleap})
 
-es = EarlyStopping(monitor='val_loss', mode='min', patience=15,
+es = EarlyStopping(monitor='val_accuracy', mode='max', patience=15,
                    restore_best_weights=False)
-lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=1,
-                          min_lr=0.0001)
+lr_cb = ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=5,
+                          verbose=1, min_lr=0.0001)
 mc = ModelCheckpoint(filepath=f"best_model_{datetime.now()}.h5",
                      save_best_only=True)
 callbacks = [es, lr_cb, mc, WandbCallback()]
