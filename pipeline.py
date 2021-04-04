@@ -6,6 +6,8 @@ from tensorflow import keras
 from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
                                         ReduceLROnPlateau)
 from datetime import datetime
+import numpy as np
+np.random.seed(0)
 
 
 # model_name = "first_try.h5"
@@ -15,12 +17,14 @@ overleap = 2**11
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
+np.savez("./test_data", **{"X": test_X, "y": test_y})
+
 n_epochs = 90
 batch_size = 64
 lr = 0.001
 optimizer = keras.optimizers.Adam(lr)
 loss = keras.losses.categorical_crossentropy
-n_hidden_conv = 3
+n_hidden_conv = 5
 n_filters = 64
 kernel_size = 3
 
@@ -39,7 +43,7 @@ wandb.init(project='nn2_valid_split',
                    "window_size": window_size, "overleap": overleap})
 
 es = EarlyStopping(monitor='val_accuracy', mode='max', patience=15,
-                   restore_best_weights=False)
+                   restore_best_weights=True)
 lr_cb = ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=5,
                           verbose=1, min_lr=0.0001)
 mc = ModelCheckpoint(filepath=f"best_model_{datetime.now()}.h5",
@@ -52,7 +56,11 @@ history = model.fit(train_X, train_y, epochs=n_epochs,
                     batch_size=batch_size)
 
 test_loss, test_acc, test_f1 = model.evaluate(test_X, test_y)
+
 wandb.config.update({"test_loss": test_loss,
                      "test_acc": test_acc,
                      "test_f1": test_f1})
 wandb.finish()
+
+np.savez("./pred_data", **{"y_pred": model.predict(test_y)})
+
