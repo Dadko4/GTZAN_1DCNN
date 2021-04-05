@@ -68,6 +68,7 @@ class DataLoader:
         return view
 
     def _train_test_split(self, test_size, preprocess_test=True):
+        print("train test split...", end="")
         self._test_size = test_size
         ts = 1 - test_size
         self.train_X, self.test_X = np.split(self._data, [int(ts*len(self._data))])
@@ -75,15 +76,17 @@ class DataLoader:
         if preprocess_test:
             train_X, _ = self._make_windows(self.train_X, self.train_y)
             _ = self._scale(train_X, fit=True)
-            self.test_X = self._scale(self.test_X)
             test_X, self.test_y = self._make_windows(self.test_X, self.test_y)
+            self.test_X = self._scale(test_X)
 
     def get_folds(self, test_size=0.1, cv=5, scale=True):
         if self._data is None:
             self._init_data()
+            print("init data done")
 
         if self.test_y is None or self._test_size != test_size:
             self._train_test_split(test_size, preprocess_test=True)
+            print("done")
 
         kf = KFold(n_splits=cv)
         for train_index, val_index in kf.split(self.train_X):
