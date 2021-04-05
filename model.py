@@ -47,14 +47,14 @@ def build_model(n_hidden_conv=1, kernel_size=3, timesteps=1024,
         model.add(Conv1D(filters=filters, kernel_size=kernel_size,
                          strides=1, activation='relu'))
         model.add(Conv1D(filters=filters, kernel_size=kernel_size,
-                 strides=1, activation='relu'))
+                         strides=1, activation='relu'))
         model.add(MaxPooling1D(3, padding='same'))
         model.add(BatchNormalization())
     model.add(Dropout(0.2))
     model.add(Flatten())
     model.add(Dense(64, activation='relu'))
-    model.add(Dropout(0.4))
-    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu'))
     model.add(Dense(num_classes, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer=optimizer,
                   metrics=metrics)
