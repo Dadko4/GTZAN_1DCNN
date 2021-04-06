@@ -40,8 +40,7 @@ for ix, (train_X, val_X, train_y, val_y) in enumerate(data_loader.get_folds()):
                         timesteps=window_size, loss=loss,
                         optimizer=optimizer, filters=n_filters,
                         metrics=['accuracy', f1_m])
-    es = EarlyStopping(monitor='val_loss', mode='max', patience=15,
-                       restore_best_weights=True)
+    es = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
     lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4,
                               verbose=1, min_lr=0.0001)
     callbacks = [es, lr_cb]
