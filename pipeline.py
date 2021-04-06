@@ -10,7 +10,6 @@ import numpy as np
 np.random.seed(0)
 
 
-# model_name = "first_try.h5"
 window_size = 2**14
 overleap = 2**11
 
@@ -19,7 +18,9 @@ train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
 test_song_labels = data_loader._song_labels
 
-np.savez("./test_data", **{"X": test_X, "y": test_y, "songs": test_song_labels})
+print(test_song_labels.shape)
+now = datetime.now()
+np.savez(f"./test_data_{now}", **{"X": test_X, "y": test_y, "songs": test_song_labels})
 
 n_epochs = 90
 batch_size = 64
@@ -44,11 +45,10 @@ wandb.init(project='nn2_valid_split',
                    "kernel_size": kernel_size, "n_filters": n_filters,
                    "window_size": window_size, "overleap": overleap})
 
-es = EarlyStopping(monitor='val_accuracy', mode='max', patience=15,
-                   restore_best_weights=True)
-lr_cb = ReduceLROnPlateau(monitor='val_accuracy', factor=0.5, patience=5,
+es = EarlyStopping(monitor='val_loss', patience=9, restore_best_weights=True)
+lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5,
                           verbose=1, min_lr=0.0001)
-mc = ModelCheckpoint(filepath=f"best_model_{datetime.now()}.h5",
+mc = ModelCheckpoint(filepath=f"best_model_{now}.h5", monitor="val_loss",
                      save_best_only=True)
 callbacks = [es, lr_cb, mc, WandbCallback()]
 
@@ -64,4 +64,4 @@ wandb.config.update({"test_loss": test_loss,
                      "test_f1": test_f1})
 wandb.finish()
 
-np.savez("./pred_data", **{"y_pred": model.predict(test_y)})
+np.savez(f"./pred_data_{now}", **{"y_pred": model.predict(test_X)})

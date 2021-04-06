@@ -4,6 +4,7 @@ from glob import glob
 import os
 from tqdm import tqdm
 from tensorflow.keras.utils import to_categorical
+from sklearn.model_selection import train_test_split
 np.random.seed(1)
 
 
@@ -47,13 +48,13 @@ class DataLoader:
                 song_labels.extend([ix] * len(windows))
         data = np.expand_dims(np.vstack(all_windows), axis=-1)
         labels = np.array([self.label2idx[label] for label in all_labels])
-        song_labels = np.array(song_labels)
+        self._song_labels = np.array(song_labels)
         if shuffle:
             idx = np.random.randint(0, len(data), len(data))
             data = data[idx]
             labels = labels[idx]
             if is_test:
-                self._song_labels = song_labels[idx]
+                self._song_labels = self._song_labels[idx]
         return data, to_categorical(labels)
 
     def _scale(self, X, fit=False):
@@ -76,14 +77,15 @@ class DataLoader:
     def get_data(self, val_size=0.1, test_size=0.1, scale=True):
         if self.data is None:
             self._init_data()
-        vs = 1 - (test_size + val_size)
-        ts = 1 - test_size
+        vs = val_size/(1-test_size)
         print("Splitting: ", end="")
-        train_X, val_X, test_X = np.split(self._data_list,
-                                          [int(vs*len(self._data_list)),
-                                           int(ts*len(self._data_list))])
-        train_y, val_y, test_y = np.split(self._genres, [int(vs*len(self._genres)),
-                                                         int(ts*len(self._genres))])
+        train_val_X, test_X, train_val_y, test_y = train_test_split(self._data_list,
+                                                                    self._genres, 
+                                                                    test_size=0.1,
+                                                                    stratify=self._genres)
+        train_X, val_X, train_y, val_y = train_test_split(train_val_X, train_val_y, 
+                                                          test_size=vs, stratify=train_val_y)
+
         print("Done")
         train_X, train_y = self._make_windows(train_X, train_y)
         train_X = self._scale(train_X, fit=True)
