@@ -17,7 +17,9 @@ overleap = 2**11
 data_loader = DataLoader(window_size=window_size, overleap=overleap)
 train_X, val_X, test_X, train_y, val_y, test_y = data_loader.get_data()
 
-np.savez("./test_data", **{"X": test_X, "y": test_y})
+test_song_labels = data_loader._song_labels
+
+np.savez("./test_data", **{"X": test_X, "y": test_y, "songs": test_song_labels})
 
 n_epochs = 90
 batch_size = 64
@@ -63,4 +65,3 @@ wandb.config.update({"test_loss": test_loss,
 wandb.finish()
 
 np.savez("./pred_data", **{"y_pred": model.predict(test_y)})
-

@@ -47,7 +47,7 @@ def build_model(n_hidden_conv=1, kernel_size=3, timesteps=1024,
         model.add(Conv1D(filters=filters, kernel_size=kernel_size,
                          strides=1, activation='relu'))
         model.add(Conv1D(filters=filters, kernel_size=kernel_size,
-                 strides=1, activation='relu'))
+                  strides=1, activation='relu'))
         model.add(MaxPooling1D(3, padding='same'))
         model.add(BatchNormalization())
     model.add(Dropout(0.2))

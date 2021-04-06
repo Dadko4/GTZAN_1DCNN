@@ -14,6 +14,7 @@ class DataLoader:
         self.window_size = window_size
         self.overleap = overleap
         self.regex_path = regex_path
+        self.test_song_mapper = []
         self.data = None
 
     def _init_data(self, shuffle=True):
@@ -32,22 +33,27 @@ class DataLoader:
         self._data_list = np.array(data_list)[idx]
         self._genres = np.array(genres)[idx]
 
-    def _make_windows(self, data_list, genres, shuffle=True):
+    def _make_windows(self, data_list, genres, shuffle=True, is_test=False):
         all_windows = []
         all_labels = []
-        for datapoint, label in tqdm(zip(data_list, genres)):
+        song_labels = []
+        for ix, (datapoint, label) in tqdm(enumerate(zip(data_list, genres))):
             windows = self._window(datapoint,
                                    window_size=self.window_size,
                                    overleap=self.overleap)
             all_windows.append(windows)
             all_labels.extend([label] * len(windows))
-
+            if is_test:
+                song_labels.extend([ix] * len(windows))
         data = np.expand_dims(np.vstack(all_windows), axis=-1)
         labels = np.array([self.label2idx[label] for label in all_labels])
+        song_labels = np.array(song_labels)
         if shuffle:
             idx = np.random.randint(0, len(data), len(data))
             data = data[idx]
             labels = labels[idx]
+            if is_test:
+                self._song_labels = song_labels[idx]
         return data, to_categorical(labels)
 
     def _scale(self, X, fit=False):
@@ -83,7 +89,7 @@ class DataLoader:
         train_X = self._scale(train_X, fit=True)
         val_X, val_y = self._make_windows(val_X, val_y)
         val_X = self._scale(val_X)
-        test_X, test_y = self._make_windows(test_X, test_y)
+        test_X, test_y = self._make_windows(test_X, test_y, is_test=True)
         test_X = self._scale(test_X)
 
         return train_X, val_X, test_X, train_y, val_y, test_y
