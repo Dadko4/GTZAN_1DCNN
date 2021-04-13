@@ -31,8 +31,8 @@ wandb.init(project='nn2_cross_val',
 cv_acc = []
 cv_loss = []
 cv_f1 = []
-best_model = None
 best_acc = 0.
+mc = ModelCheckpoint('best_model_cv.h5', monitor='val_loss')
 for ix, (train_X, val_X, train_y, val_y) in enumerate(data_loader.get_folds()):
     # API key = 8d9fd59df428fadd8926c268bf32588eb4c560f6
     print(f"build model {ix}")
@@ -40,10 +40,10 @@ for ix, (train_X, val_X, train_y, val_y) in enumerate(data_loader.get_folds()):
                         timesteps=window_size, loss=loss,
                         optimizer=optimizer, filters=n_filters,
                         metrics=['accuracy', f1_m])
-    es = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+    es = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4,
                               verbose=1, min_lr=0.0001)
-    callbacks = [es, lr_cb]
+    callbacks = [es, lr_cb, mc]
     print(f"start train {ix}")
     history = model.fit(train_X, train_y, epochs=n_epochs,
                         validation_data=(val_X, val_y),
@@ -54,7 +54,6 @@ for ix, (train_X, val_X, train_y, val_y) in enumerate(data_loader.get_folds()):
     print(f"val_acc: {val_acc}")
     if val_acc > best_acc:
         best_acc = val_acc
-        model.save("best_model.h5")
     cv_acc.append(val_acc)
     cv_loss.append(val_loss)
     cv_f1.append(val_f1)
@@ -67,10 +66,12 @@ wandb.config.update({"mean_cv_acc": np.mean(cv_acc),
                      "cv_f1": cv_f1})
 
 init_env()
-model = keras.models.load_model("best_model.h5", custom_objects={'f1_m': f1_m})
 
 test_X, test_y = data_loader.get_test_data()
-np.savez("./test_data", **{"X": test_X, "y": test_y})
+np.savez("./test_data_cv", **{"X": test_X, "y": test_y})
+
+model = keras.models.load_model('best_model_cv.h5', custom_objects={'f1_m': f1_m})
+
 test_loss, test_acc, test_f1 = model.evaluate(test_X, test_y)
 
 wandb.config.update({"test_loss": test_loss,
