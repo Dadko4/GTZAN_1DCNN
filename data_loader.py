@@ -30,8 +30,8 @@ class DataLoader:
             except ValueError:
                 continue
         self.label2idx = {l: idx for idx, l in enumerate(np.unique(genres))}
-        idx = np.arange(len(data_list))
-        np.shuffle(idx)
+        idx = np.arange(0, len(data_list))
+        np.random.shuffle(idx)
         self._data_list = np.array(data_list)[idx]
         self._genres = np.array(genres)[idx]
 
@@ -51,8 +51,8 @@ class DataLoader:
         labels = np.array([self.label2idx[label] for label in all_labels])
         self._song_labels = np.array(song_labels)
         if shuffle:
-            idx = np.arange(len(data))
-            np.shuffle(idx)
+            idx = np.arange(0, len(data_list))
+            np.random.shuffle(idx)
             data = data[idx]
             labels = labels[idx]
             if is_test:
