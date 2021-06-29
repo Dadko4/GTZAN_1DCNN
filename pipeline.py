@@ -20,7 +20,8 @@ test_song_labels = data_loader._song_labels
 
 print(test_song_labels.shape)
 now = datetime.now()
-np.savez(f"./test_data_{now}", **{"X": test_X, "y": test_y, "songs": test_song_labels})
+np.savez(f"./test_data_{now}",
+         **{"X": test_X, "y": test_y, "songs": test_song_labels})
 
 n_epochs = 90
 batch_size = 64
@@ -36,7 +37,6 @@ model = build_model(n_hidden_conv=n_hidden_conv, kernel_size=kernel_size,
                     optimizer=optimizer, filters=n_filters,
                     metrics=['accuracy', f1_m])
 
-# API key = 8d9fd59df428fadd8926c268bf32588eb4c560f6
 wandb.init(project='nn2_valid_split',
            config={"optimizer": str(optimizer).split()[0].split('.')[-1],
                    "loss": loss.__name__.split('.')[-1],
